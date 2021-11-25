@@ -15,7 +15,6 @@ logger = logging.getLogger('discord-bot')
 
 
 class DiscordBot(commands.Bot):
-
     def __init__(self, command_prefix, self_bot, dataHolder):
         commands.Bot.__init__(self, command_prefix=command_prefix, self_bot=self_bot)
         self.dataHolder = dataHolder
@@ -52,6 +51,13 @@ class DiscordBot(commands.Bot):
             embed.description = self.dataHolder.getTomorrowFreeFood()
             await ctx.channel.send(embed=embed)
 
+        @self.command(name='hvtoday', pass_context=True)
+        async def hvtoday(ctx):
+            # self.dataHolder.gethvToday()
+            embed = discord.Embed()
+            embed.description = self.dataHolder.gethvToday()
+            await ctx.channel.send(embed=embed)
+
     @tasks.loop(seconds=30)
     async def sendTodayFreeFood(self, ctx):
         if datetime.datetime.now().hour == 9:
@@ -68,7 +74,7 @@ class DiscordBot(commands.Bot):
 
 
 def run(dataHolder):
-    bot = DiscordBot(command_prefix="!", self_bot=False, dataHolder=dataHolder)
+    bot = DiscordBot(command_prefix="$", self_bot=False, dataHolder=dataHolder)
     discord_config = json.load(open('discord_config.json', 'r'))
     TOKEN = discord_config["token"]
     bot.run(TOKEN)

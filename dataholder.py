@@ -5,6 +5,7 @@ class DataHolder:
     def __init__(self):
         self.free_foods = []
         self.hackathons = []
+        self.hvtodayfullmenu = {}
     
     def getFreeFoods(self, limit):
         s = ""
@@ -36,3 +37,16 @@ class DataHolder:
                 today_events.append(freeFoodEvent)
 
         return self.getEventsToString(today_events)
+    
+    def gethvToday(self):
+        time = self.hvtodayfullmenu.keys()
+        display = "Today's menu is:\n"
+        for key in time:
+            display += '    - ' + key.capitalize() + ':\n'
+            for food, ingredients in self.hvtodayfullmenu[key]:
+                display += '        - ' + food.capitalize() + '\n'
+                if not isinstance(ingredients, float):
+                    display += '            + ' + ingredients + '\n'
+        return display
+                
+

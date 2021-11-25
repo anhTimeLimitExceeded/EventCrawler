@@ -7,6 +7,9 @@ from dataholder import DataHolder
 import email_bot
 import schedule
 import time
+from bs4 import BeautifulSoup
+import bs4
+import numpy as np
 
 logging.basicConfig(handlers=[logging.FileHandler(filename="main.log", 
                                                  encoding='utf-8', mode='a+')],
@@ -60,6 +63,49 @@ def crawl(dataHolder):
     dataHolder.free_foods = freeFoodEvents
     logger.info(f"finished crawling {len(freeFoodEvents)} entries")
 
+def hvcrawler(dataHolder):
+    logger.info("start crawling")
+    today_link = BeautifulSoup(requests.get('https://depauw.cafebonappetit.com/').content, 'html.parser') \
+                .find_all('a', {'target': '_blank'})[1]['href']
+    soup = BeautifulSoup(requests.get(today_link).content, 'html.parser')
+
+    full_menu = soup.find_all('div', {'class':'fulldaymenu'})
+    if len(full_menu) != 0:
+        all_today = full_menu[0].find_all('strong')
+        if len(full_menu) == 1:
+            lunch = []
+            dinner = []
+        elif len(full_menu) == 2:
+            lunch = full_menu[1].find_all('strong')
+            dinner = []
+        else:
+            lunch = full_menu[1].find_all('strong')
+            dinner = full_menu[2].find_all('strong')
+        ingredients = []
+
+        # Ingredients
+        for i in range(len(all_today)):
+            if isinstance(all_today[i].next.next, bs4.element.NavigableString): 
+                ingredients.append(np.nan)
+            else:
+                ingredients.append(all_today[i].next.next.text.strip().replace('with', ''))
+        
+        today_food_ingres = []
+        for i in range(len(all_today)):
+            today_food_ingres.append([all_today[i].text.capitalize(), ingredients[i]])
+            if i == len(all_today)-len(lunch)-1:
+                dataHolder.hvtodayfullmenu['breakfast'] = today_food_ingres
+                today_food_ingres = []
+            if i == len(lunch)-len(dinner)-1:
+                dataHolder.hvtodayfullmenu['lunch'] = today_food_ingres
+                today_food_ingres = []
+            if i == len(all_today)-1:
+                dataHolder.hvtodayfullmenu['dinner'] = today_food_ingres
+                today_food_ingres = []
+        
+    
+
+
 def send_email(dataHolder):
     body = ""
     for freeFoodEvent in dataHolder.free_foods:
@@ -80,11 +126,12 @@ def test():
 
 def run(dataHolder):
     crawl(dataHolder)
-    try:
-        schedule.every().day.at("09:00").do(crawl, dataHolder=dataHolder)
-        schedule.every(1).minutes.do(test)
-        while True:
-            schedule.run_pending()
-            time.sleep(30) # wait one minute
-    except Exception: 
-        logging.exception("Free-food Error")
+    hvcrawler(dataHolder)
+    # try:
+    #     # schedule.every().day.at("09:00").do(crawl, dataHolder=dataHolder)
+    #     # schedule.every(1).minutes.do(test)
+    #     # while True:
+    #         # schedule.run_pending()
+    #         # time.sleep(30) # wait one minute
+    # except Exception: 
+    #     logging.exception("Free-food Error")

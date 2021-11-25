@@ -24,9 +24,10 @@ if __name__ == "__main__":
     logger.info("starting service")
     dataHolder = DataHolder()
 
-    crawler_thread = threading.Thread(target=crawler.run, args=(dataHolder,))
-    crawler_thread.start()
-    logger.info("crawler started")
+    # crawler_thread = threading.Thread(target=crawler.run, args=(dataHolder,))
+    # crawler_thread.start()
+    # logger.info("crawler started")
+    crawler.run(dataHolder)
 
     loop = asyncio.get_event_loop()
     loop.create_task(discord_bot.run(dataHolder))
